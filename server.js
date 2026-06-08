@@ -163,6 +163,14 @@ app.post('/api/notices', requireAdmin, async (req, res, next) => {
   }
 });
 
+app.get(['/publish', '/admin'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'publish.html'));
+});
+
+app.get(['/viewer', '/notices'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({
