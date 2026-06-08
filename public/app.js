@@ -89,7 +89,7 @@ async function fetchJson(url, options = {}) {
 
 async function loadNotices() {
   try {
-    const data = await fetchJson('/api/notices');
+    const data = await fetchJson('https://notice-board-3pyh.onrender.com/api/notices');
     renderNotices(data.notices || []);
   } catch (error) {
     noticeCount.textContent = 'Offline';
