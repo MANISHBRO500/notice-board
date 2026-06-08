@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Board</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Live updates</p>
+        <h1>Notice Board</h1>
+      </div>
+      <button class="ghost-button" id="refreshButton" type="button">Refresh</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel admin-panel" aria-labelledby="adminTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h2 id="adminTitle">Publish Notice</h2>
+          </div>
+          <span class="status-pill" id="adminStatus">Ready</span>
+        </div>
+
+        <form class="notice-form" id="noticeForm">
+          <label for="title">Title</label>
+          <input id="title" name="title" type="text" maxlength="120" placeholder="Exam schedule update" required>
+
+          <label for="message">Text</label>
+          <textarea id="message" name="message" rows="8" maxlength="2000" placeholder="Write the notice details..." required></textarea>
+
+          <label for="imageUrl">Image Link</label>
+          <input id="imageUrl" name="imageUrl" type="url" placeholder="https://example.com/notice.jpg">
+
+          <label for="adminPassword">Admin Password</label>
+          <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" required>
+
+          <button class="primary-button" id="submitButton" type="submit">Publish</button>
+        </form>
+      </section>
+
+      <section class="panel viewer-panel" aria-labelledby="viewerTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Viewer</p>
+            <h2 id="viewerTitle">Latest Notices</h2>
+          </div>
+          <span class="status-pill" id="noticeCount">0 notices</span>
+        </div>
+
+        <div class="notice-list" id="noticeList" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <template id="noticeTemplate">
+      <article class="notice-card">
+        <img class="notice-image" alt="">
+        <div class="notice-content">
+          <time class="notice-date"></time>
+          <h3></h3>
+          <p></p>
+        </div>
+      </article>
+    </template>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
