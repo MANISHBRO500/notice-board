@@ -13,6 +13,7 @@ const port = process.env.PORT || 3000;
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const databaseName = process.env.MONGODB_DB || 'notice_board';
 const adminPassword = process.env.ADMIN_PASSWORD || '';
+const noticeRetentionMonths = parseRetentionMonths(process.env.NOTICE_RETENTION_MONTHS);
 
 const client = new MongoClient(mongoUri);
 let noticesCollection;
@@ -22,6 +23,38 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 function readText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseRetentionMonths(value) {
+  const months = Number.parseInt(value || '2', 10);
+
+  if (!Number.isInteger(months) || months < 1) {
+    return 2;
+  }
+
+  return months;
+}
+
+function addMonths(date, months) {
+  const result = new Date(date);
+  const originalDay = result.getDate();
+
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+
+  const daysInTargetMonth = new Date(
+    result.getFullYear(),
+    result.getMonth() + 1,
+    0
+  ).getDate();
+
+  result.setDate(Math.min(originalDay, daysInTargetMonth));
+
+  return result;
+}
+
+function getNoticeExpiry(createdAt) {
+  return addMonths(createdAt, noticeRetentionMonths);
 }
 
 function passwordsMatch(suppliedPassword) {
@@ -108,8 +141,49 @@ function serializeNotice(notice) {
     title: notice.title,
     message: notice.message,
     imageUrl: notice.imageUrl || '',
-    createdAt: notice.createdAt
+    createdAt: notice.createdAt,
+    expiresAt: notice.expiresAt || null
   };
+}
+
+async function backfillNoticeExpiry() {
+  const cursor = noticesCollection.find(
+    {
+      expiresAt: { $exists: false },
+      createdAt: { $type: 'date' }
+    },
+    {
+      projection: {
+        _id: 1,
+        createdAt: 1
+      }
+    }
+  );
+  const operations = [];
+
+  for await (const notice of cursor) {
+    operations.push({
+      updateOne: {
+        filter: {
+          _id: notice._id
+        },
+        update: {
+          $set: {
+            expiresAt: getNoticeExpiry(notice.createdAt)
+          }
+        }
+      }
+    });
+
+    if (operations.length === 500) {
+      await noticesCollection.bulkWrite(operations, { ordered: false });
+      operations.length = 0;
+    }
+  }
+
+  if (operations.length) {
+    await noticesCollection.bulkWrite(operations, { ordered: false });
+  }
 }
 
 app.get('/api/health', (_req, res) => {
@@ -121,8 +195,14 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/notices', async (_req, res, next) => {
   try {
+    const now = new Date();
     const notices = await noticesCollection
-      .find({})
+      .find({
+        $or: [
+          { expiresAt: { $gt: now } },
+          { expiresAt: { $exists: false } }
+        ]
+      })
       .sort({ createdAt: -1 })
       .limit(100)
       .toArray();
@@ -145,9 +225,11 @@ app.post('/api/notices', requireAdmin, async (req, res, next) => {
       });
     }
 
+    const createdAt = new Date();
     const notice = {
       ...validation.notice,
-      createdAt: new Date()
+      createdAt,
+      expiresAt: getNoticeExpiry(createdAt)
     };
 
     const result = await noticesCollection.insertOne(notice);
@@ -198,6 +280,14 @@ async function startServer() {
   const database = client.db(databaseName);
   noticesCollection = database.collection('notices');
   await noticesCollection.createIndex({ createdAt: -1 });
+  await noticesCollection.createIndex(
+    { expiresAt: 1 },
+    {
+      expireAfterSeconds: 0,
+      name: 'notice_expiry_ttl'
+    }
+  );
+  await backfillNoticeExpiry();
 
   app.listen(port, () => {
     console.log(`Notice board running on http://localhost:${port}`);
