@@ -45,7 +45,7 @@ noticeForm.addEventListener('submit', async (event) => {
   setAdminStatus('Saving');
 
   try {
-    await fetchJson('/api/notices', {
+    await fetchJson('https://notice-board-3pyh.onrender.com/api/notices', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
