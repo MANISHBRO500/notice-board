@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publish Notice</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Publish Notice</h1>
+      </div>
+      <div class="page-actions">
+        <a class="ghost-button" href="/">View Notices</a>
+      </div>
+    </header>
+
+    <main class="layout single-layout publish-layout">
+      <section class="panel admin-panel" aria-labelledby="adminTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Upload</p>
+            <h2 id="adminTitle">New Notice</h2>
+          </div>
+          <span class="status-pill" id="adminStatus">Ready</span>
+        </div>
+
+        <form class="notice-form" id="noticeForm">
+          <label for="title">Title</label>
+          <input id="title" name="title" type="text" maxlength="120" placeholder="Exam schedule update" required>
+
+          <label for="message">Text</label>
+          <textarea id="message" name="message" rows="8" maxlength="2000" placeholder="Write the notice details..." required></textarea>
+
+          <label for="imageUrl">Image Link</label>
+          <input id="imageUrl" name="imageUrl" type="url" placeholder="https://example.com/notice.jpg">
+
+          <label for="adminPassword">Admin Password</label>
+          <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" required>
+
+          <button class="primary-button" id="submitButton" type="submit">Publish</button>
+        </form>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/publish.js" defer></script>
+  </body>
+</html>
