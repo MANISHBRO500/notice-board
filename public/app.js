@@ -96,7 +96,7 @@ async function fetchJson(url, options = {}) {
 
 async function loadNotices() {
   try {
-    const data = await fetchJson('/api/notices');
+    const data = await fetchJson('https://notice-board-3pyh.onrender.com/api/notices');
     renderNotices(data.notices || []);
   } catch (error) {
     noticeCount.textContent = 'Offline';
@@ -119,7 +119,7 @@ noticeForm.addEventListener('submit', async (event) => {
   setAdminStatus('Saving');
 
   try {
-    await fetchJson('/api/notices', {
+    await fetchJson('https://notice-board-3pyh.onrender.com/api/notices', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
